@@ -26,7 +26,7 @@ function _appGetInitialProps() {
     _appGetInitialProps = /**
  * `App` component is used for initialize of pages. It allows for overwriting and full control of the `page` initialization.
  * This allows for keeping state between navigation, custom error handling, injecting additional data.
- */ _async_to_generator(function*({ Component , ctx  }) {
+ */ _async_to_generator(function*({ Component, ctx }) {
         const pageProps = yield (0, _utils).loadGetInitialProps(Component, ctx);
         return {
             pageProps
@@ -42,5 +42,7 @@ class App extends (_Component = _react.default.Component) {
     }
 }
 App.origGetInitialProps = appGetInitialProps;
-App.getInitialProps = appGetInitialProps;
+App.getInitialProps = _withSuperJSONInitProps(appGetInitialProps, [
+    "smth"
+]);
 exports.default = App;

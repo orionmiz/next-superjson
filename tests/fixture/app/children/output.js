@@ -8,8 +8,6 @@ export default function Page() {
         date: date,
         ...rest
     })} component={ClientComponent}>
-
       <p>children</p>
-
     </SuperJSONComponent>;
 }
