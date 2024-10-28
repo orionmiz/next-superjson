@@ -79,7 +79,7 @@ impl VisitMut for AppTransformer {
                 vec![
                     ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
                         specifiers: vec![ImportNamedSpecifier {
-                            local: Ident::new(SERIALIZER_FUNCTION.into(), DUMMY_SP),
+                            local: Ident::new_no_ctxt(SERIALIZER_FUNCTION.into(), DUMMY_SP),
                             span: DUMMY_SP,
                             imported: None,
                             is_type_only: false,
@@ -90,7 +90,7 @@ impl VisitMut for AppTransformer {
                     })),
                     ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
                         specifiers: vec![ImportDefaultSpecifier {
-                            local: Ident::new(DESERIALIZER_COMPONENT.into(), DUMMY_SP),
+                            local: Ident::new_no_ctxt(DESERIALIZER_COMPONENT.into(), DUMMY_SP),
                             span: DUMMY_SP,
                         }
                         .into()],
@@ -171,7 +171,7 @@ impl VisitMut for AppTransformer {
             // replace attrs
             elem.opening.attrs = vec![
                 JSXAttr {
-                    name: Ident::new(DESERIALIZER_PROPS_ATTR.into(), DUMMY_SP).into(),
+                    name: IdentName::new(DESERIALIZER_PROPS_ATTR.into(), DUMMY_SP).into(),
                     span: DUMMY_SP,
                     value: Some(
                         JSXExprContainer {
@@ -181,13 +181,14 @@ impl VisitMut for AppTransformer {
                                     props: list,
                                 })
                                 .into()],
-                                callee: Box::new(Expr::Ident(Ident::new(
+                                callee: Box::new(Expr::Ident(Ident::new_no_ctxt(
                                     SERIALIZER_FUNCTION.into(),
                                     DUMMY_SP,
                                 )))
                                 .into(),
                                 span: DUMMY_SP,
                                 type_args: None,
+                                ..Default::default()
                             }))
                             .into(),
                             span: DUMMY_SP,
@@ -197,7 +198,7 @@ impl VisitMut for AppTransformer {
                 }
                 .into(),
                 JSXAttr {
-                    name: Ident::new(DESERIALIZER_PROPS_COMPONENT.into(), DUMMY_SP).into(),
+                    name: IdentName::new(DESERIALIZER_PROPS_COMPONENT.into(), DUMMY_SP).into(),
                     span: DUMMY_SP,
                     value: Some(
                         JSXExprContainer {
@@ -211,10 +212,10 @@ impl VisitMut for AppTransformer {
             ];
 
             // change element name
-            elem.opening.name = Ident::new(DESERIALIZER_COMPONENT.into(), DUMMY_SP).into();
+            elem.opening.name = Ident::new_no_ctxt(DESERIALIZER_COMPONENT.into(), DUMMY_SP).into();
 
             if let Some(closing) = &mut elem.closing {
-                closing.name = Ident::new(DESERIALIZER_COMPONENT.into(), DUMMY_SP).into();
+                closing.name = Ident::new_no_ctxt(DESERIALIZER_COMPONENT.into(), DUMMY_SP).into();
             }
 
             self.transformed = true;
