@@ -15,18 +15,12 @@ pub fn superjson_import_decl(superjson_import_name: &str) -> ModuleItem {
         span: DUMMY_SP,
         type_only: false,
         specifiers: vec![ImportSpecifier::Named(ImportNamedSpecifier {
-            local: Ident {
-                sym: format!("_{superjson_import_name}").into(),
-                span: DUMMY_SP,
-                optional: false,
-            },
+            local: Ident::new_no_ctxt(format!("_{superjson_import_name}").into(), DUMMY_SP),
             span: DUMMY_SP,
-            imported: Some(ModuleExportName::Ident(Ident {
-                //sym: superjson_import_name.into(),
-                sym: superjson_import_name.into(),
-                span: DUMMY_SP,
-                optional: false,
-            })),
+            imported: Some(ModuleExportName::Ident(Ident::new_no_ctxt(
+                superjson_import_name.into(),
+                DUMMY_SP,
+            ))),
             is_type_only: false,
         })],
         src: Box::new(Str {
@@ -43,20 +37,21 @@ pub fn temp_props_item(excluded: ExprOrSpread) -> ModuleItem {
         decls: vec![VarDeclarator {
             definite: false,
             init: Some(
-                Box::new(Expr::Ident(Ident::new(
+                Box::new(Expr::Ident(Ident::new_no_ctxt(
                     NEXT_SSG_PROPS_LOCAL.into(),
                     DUMMY_SP,
                 )))
                 .wrap_props(excluded),
             ),
             name: Pat::Ident(BindingIdent {
-                id: Ident::new(NEXT_SSG_PROPS_ORIG.into(), DUMMY_SP),
+                id: Ident::new_no_ctxt(NEXT_SSG_PROPS_ORIG.into(), DUMMY_SP),
                 type_ann: None,
             }),
             span: DUMMY_SP,
         }],
         kind: VarDeclKind::Const,
         span: DUMMY_SP,
+        ..Default::default()
     }))))
 }
 
@@ -68,7 +63,7 @@ pub fn temp_import_item(imported: ModuleExportName, local: &str, src: &mut Str) 
         specifiers: vec![ImportSpecifier::Named(ImportNamedSpecifier {
             imported: Some(imported),
             is_type_only: false,
-            local: Ident::new(local.into(), DUMMY_SP),
+            local: Ident::new_no_ctxt(local.into(), DUMMY_SP),
             span: DUMMY_SP,
         })],
         // should clone
@@ -87,25 +82,28 @@ impl Wrapper for Box<Expr> {
     fn wrap_props(self, excluded: ExprOrSpread) -> Box<Expr> {
         Box::new(Expr::Call(CallExpr {
             args: vec![self.as_arg(), excluded],
-            callee: Ident::new(SUPERJSON_PROPS_LOCAL.into(), DUMMY_SP).as_callee(),
+            callee: Ident::new_no_ctxt(SUPERJSON_PROPS_LOCAL.into(), DUMMY_SP).as_callee(),
             span: DUMMY_SP,
             type_args: None,
+            ..Default::default()
         }))
     }
     fn wrap_init_props(self, excluded: ExprOrSpread) -> Box<Expr> {
         Box::new(Expr::Call(CallExpr {
             args: vec![self.as_arg(), excluded],
-            callee: Ident::new(SUPERJSON_INIT_PROPS_LOCAL.into(), DUMMY_SP).as_callee(),
+            callee: Ident::new_no_ctxt(SUPERJSON_INIT_PROPS_LOCAL.into(), DUMMY_SP).as_callee(),
             span: DUMMY_SP,
             type_args: None,
+            ..Default::default()
         }))
     }
     fn wrap_page(self) -> Box<Expr> {
         Box::new(Expr::Call(CallExpr {
             args: vec![self.as_arg()],
-            callee: Ident::new(SUPERJSON_PAGE_LOCAL.into(), DUMMY_SP).as_callee(),
+            callee: Ident::new_no_ctxt(SUPERJSON_PAGE_LOCAL.into(), DUMMY_SP).as_callee(),
             span: DUMMY_SP,
             type_args: None,
+            ..Default::default()
         }))
     }
 }
@@ -135,6 +133,7 @@ impl DeclUtil for FnDecl {
             }],
             kind: VarDeclKind::Const,
             span: DUMMY_SP,
+            ..Default::default()
         }))
     }
 }
