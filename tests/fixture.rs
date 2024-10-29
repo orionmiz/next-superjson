@@ -20,6 +20,7 @@ fn fixture_page(input: PathBuf) {
         &|_| {
             as_folder(transform_page(Config {
                 excluded: vec!["smth".to_string()],
+                ..Default::default()
             }))
         },
         &input,
@@ -42,6 +43,7 @@ fn fixture_app(input: PathBuf) {
         &|_| {
             as_folder(transform_app(Config {
                 excluded: vec!["smth".to_string()],
+                ..Default::default()
             }))
         },
         &input,

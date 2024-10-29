@@ -190,7 +190,7 @@ impl VisitMut for PageTransformer {
                             s.imported = Some(ModuleExportName::Ident(s.local.take()));
                         }
 
-                        s.local = Ident::new(NEXT_SSG_PROPS_LOCAL.into(), DUMMY_SP);
+                        s.local = Ident::new_no_ctxt(NEXT_SSG_PROPS_LOCAL.into(), DUMMY_SP);
 
                         new_items.push(item.take());
 
@@ -261,7 +261,7 @@ impl VisitMut for PageTransformer {
                                             ExportNamedSpecifier {
                                                 exported: s.exported.take(),
                                                 is_type_only: false,
-                                                orig: ModuleExportName::Ident(Ident::new(
+                                                orig: ModuleExportName::Ident(Ident::new_no_ctxt(
                                                     NEXT_SSG_PROPS_ORIG.into(),
                                                     DUMMY_SP,
                                                 )),
@@ -297,7 +297,7 @@ impl VisitMut for PageTransformer {
                                 // const gSSP = () => {}
                                 // => gSSP
                                 if self.props.ident.spec.is_some() {
-                                    s.orig = ModuleExportName::Ident(Ident::new(
+                                    s.orig = ModuleExportName::Ident(Ident::new_no_ctxt(
                                         NEXT_SSG_PROPS_ORIG.into(),
                                         DUMMY_SP,
                                     ));
@@ -401,7 +401,7 @@ impl VisitMut for PageTransformer {
 
                                 let new_page = ModuleItem::ModuleDecl(
                                     ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
-                                        expr: Box::new(Expr::Ident(Ident::new(
+                                        expr: Box::new(Expr::Ident(Ident::new_no_ctxt(
                                             NEXT_PAGE_LOCAL.into(),
                                             DUMMY_SP,
                                         )))
