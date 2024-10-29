@@ -1,12 +1,7 @@
-use std::path::{Component, Path};
-
 use serde::Deserialize;
 use swc_core::{
     ecma::{ast::*, visit::*},
-    plugin::{
-        metadata::TransformPluginMetadataContextKind, plugin_transform,
-        proxies::TransformPluginProgramMetadata,
-    },
+    plugin::{plugin_transform, proxies::TransformPluginProgramMetadata},
 };
 
 use app::*;
@@ -21,70 +16,87 @@ mod utils;
 pub struct Config {
     #[serde(default)]
     pub excluded: Vec<String>,
+    #[serde(default)]
+    pub force_page_router: Option<bool>,
 }
 
-pub enum DirType {
-    Page,
-    App,
-}
+// pub enum DirType {
+//     Page,
+//     App,
+// }
 
 #[plugin_transform]
 pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
-    let raw_cwd = _metadata
-        .get_context(&TransformPluginMetadataContextKind::Cwd)
-        .unwrap();
+    let config = serde_json::from_str::<Config>(
+        &_metadata
+            .get_transform_plugin_config()
+            .unwrap_or_else(|| "{}".to_string()),
+    )
+    .expect("Failed to parse plugin config");
 
-    let raw_path = _metadata
-        .get_context(&TransformPluginMetadataContextKind::Filename)
-        .unwrap();
-
-    // Windows path separator -> Unix path separator
-    let cwd = &raw_cwd.replace('\\', "/");
-    let path = &raw_path.replace('\\', "/");
-
-    // overlapping prefix
-    let prefix = cwd
-        .chars()
-        .zip(path.chars())
-        .take_while(|(a, b)| a == b)
-        .map(|(a, _)| a)
-        .collect::<String>();
-
-    if let Some(relative_path) = path.strip_prefix(&prefix) {
-        let mut is_page = false;
-
-        for component in Path::new(relative_path).components() {
-            match component {
-                Component::Normal(str) => match str.to_str().unwrap_or_default() {
-                    // skip non-source stuff
-                    "node_modules" => {
-                        return program;
-                    }
-                    "pages" => {
-                        is_page = true;
-                        break;
-                    }
-                    _ => {}
-                },
-                _ => {}
-            }
-        }
-
-        // consider server components outside the app directory
-        let dir_type = if is_page { DirType::Page } else { DirType::App };
-
-        let config = serde_json::from_str::<Config>(
-            &_metadata
-                .get_transform_plugin_config()
-                .unwrap_or_else(|| "{}".to_string()),
-        )
-        .expect("Failed to parse plugin config");
-
-        match dir_type {
-            DirType::Page => program.fold_with(&mut as_folder(transform_page(config))),
-            DirType::App => program.fold_with(&mut as_folder(transform_app(config))),
-        }
-    } else {
-        program
+    match config.force_page_router {
+        Some(true) => program.fold_with(&mut as_folder(transform_page(config))),
+        _ => program.fold_with(&mut as_folder(transform_app(config))),
     }
+
+    // re enable this code once next fixes this issue
+    // https://github.com/vercel/next.js/issues/72019
+
+    // let raw_cwd = _metadata
+    //     .get_context(&TransformPluginMetadataContextKind::Cwd)
+    //     .unwrap();
+
+    // let raw_path = _metadata
+    //     .get_context(&TransformPluginMetadataContextKind::Filename)
+    //     .unwrap();
+
+    // // Windows path separator -> Unix path separator
+    // let cwd = &raw_cwd.replace('\\', "/");
+    // let path = &raw_path.replace('\\', "/");
+
+    // // overlapping prefix
+    // let prefix = cwd
+    //     .chars()
+    //     .zip(path.chars())
+    //     .take_while(|(a, b)| a == b)
+    //     .map(|(a, _)| a)
+    //     .collect::<String>();
+
+    // if let Some(relative_path) = path.strip_prefix(&prefix) {
+    //     let mut is_page = false;
+
+    //     for component in Path::new(relative_path).components() {
+    //         match component {
+    //             Component::Normal(str) => match str.to_str().unwrap_or_default() {
+    //                 // skip non-source stuff
+    //                 "node_modules" => {
+    //                     return program;
+    //                 }
+    //                 "pages" => {
+    //                     is_page = true;
+    //                     break;
+    //                 }
+    //                 _ => {}
+    //             },
+    //             _ => {}
+    //         }
+    //     }
+
+    //     // consider server components outside the app directory
+    //     let dir_type = if is_page { DirType::Page } else { DirType::App };
+
+    //     let config = serde_json::from_str::<Config>(
+    //         &_metadata
+    //             .get_transform_plugin_config()
+    //             .unwrap_or_else(|| "{}".to_string()),
+    //     )
+    //     .expect("Failed to parse plugin config");
+
+    //     match dir_type {
+    //         DirType::Page => program.fold_with(&mut as_folder(transform_page(config))),
+    //         DirType::App => program.fold_with(&mut as_folder(transform_app(config))),
+    //     }
+    // } else {
+    //     program
+    // }
 }
