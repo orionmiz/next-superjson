@@ -63,6 +63,15 @@ You can use the `excluded` option to exclude specific properties from serializat
 ['next-superjson-plugin', { excluded: ["someProp"] }],
 ```
 
+#### With pages router
+
+There is currently an issue in `Next@15`, to use this plugin with pages router add this option:
+This will make the plugin only work inside the page router and is thus not compatible with projects using both routers.
+
+```js
+['next-superjson-plugin', { forcePageRouter: true }],
+```
+
 ## How it works
 
 ```mermaid
