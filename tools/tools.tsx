@@ -9,11 +9,28 @@ export type SuperJSONProps<P> = P & {
   _superjson?: ReturnType<typeof SuperJSON.serialize>["meta"];
 };
 
+let alreadyPatched = '__alreadyPatchedBySuperJSONPlugin';
+
+function isAlreadyPatched(gssp: any) {
+  return gssp && gssp[alreadyPatched];
+}
+
+function markAsPatched(gssp: any) {
+  if (!gssp) {
+    return gssp;
+  }
+  gssp[alreadyPatched] = true;
+}
+
 export function withSuperJSONProps<P extends JSX.IntrinsicAttributes>(
   gssp: GetServerSideProps<P>,
   exclude: string[] = []
 ): GetServerSideProps<SuperJSONProps<P>> {
-  return async function withSuperJSON(...args) {
+  if (isAlreadyPatched(gssp)) {
+    return gssp;
+  }
+  
+  return markAsPatched(async function withSuperJSON(...args) {
     const result = await gssp(...args);
 
     if (!("props" in result)) {
@@ -48,11 +65,15 @@ export function withSuperJSONProps<P extends JSX.IntrinsicAttributes>(
       ...result,
       props,
     };
-  };
+  });
 }
 
 export function withSuperJSONInitProps(gip: any, exclude: string[] = []): any {
-  return async function withSuperJSON(...args: any[]) {
+  if (isAlreadyPatched(gip)) {
+    return gip;
+  }
+  
+  return markAsPatched(async function withSuperJSON(...args: any[]) {
     const result = await gip(...args);
 
     const excludedPropValues = exclude.map((propKey) => {
@@ -79,7 +100,7 @@ export function withSuperJSONInitProps(gip: any, exclude: string[] = []): any {
       ...result,
       ...props,
     };
-  };
+  });
 }
 
 export function deserializeProps<P>(serializedProps: SuperJSONProps<P>): P {
@@ -90,13 +111,16 @@ export function deserializeProps<P>(serializedProps: SuperJSONProps<P>): P {
 export function withSuperJSONPage<P extends JSX.IntrinsicAttributes>(
   Page: React.ComponentType<P>
 ): React.ComponentType<SuperJSONProps<P>> {
+  if (isAlreadyPatched(Page)) {
+    return Page;
+  }
   function WithSuperJSON(serializedProps: SuperJSONProps<P>) {
     return <Page {...deserializeProps<P>(serializedProps)} />;
   }
 
   hoistNonReactStatics(WithSuperJSON, Page);
 
-  return WithSuperJSON;
+  return markAsPatched(WithSuperJSON);
 }
 
 export function serialize<P>(props: P): SuperJSONProps<P> {
